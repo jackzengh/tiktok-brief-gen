@@ -27,14 +27,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (50MB limit)
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: "File size must be less than 50MB" },
-        { status: 400 }
-      );
-    }
+    // // Validate file size (50MB limit)
+    // const maxSize = 100 * 1024 * 1024; // 50MB
+    // if (file.size > maxSize) {
+    //   return NextResponse.json(
+    //     { error: "File size must be less than 100MB" },
+    //     { status: 400 }
+    //   );
+    // }
 
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
@@ -65,8 +65,12 @@ export async function POST(request: NextRequest) {
 
         // Generate ad copy with Claude using the description
         try {
-          const claudeAdCopy = await generateAdCopy(videoResult.description);
-          // videoResult.claudeAdCopy = claudeAdCopy;
+          const claudeAdCopy = await generateAdCopy(
+            videoResult.description,
+            videoResult.transcript,
+            videoResult.scenes
+          );
+          videoResult.claudeAdCopy = claudeAdCopy;
         } catch (claudeError) {
           console.error("Error generating ad copy with Claude:", claudeError);
           // Continue without Claude ad copy if it fails
@@ -79,7 +83,7 @@ export async function POST(request: NextRequest) {
         // Generate ad copy with Claude using the description
         try {
           const claudeAdCopy = await generateAdCopy(imageResult.description);
-          // imageResult.claudeAdCopy = claudeAdCopy;
+          imageResult.claudeAdCopy = claudeAdCopy;
         } catch (claudeError) {
           console.error("Error generating ad copy with Claude:", claudeError);
           // Continue without Claude ad copy if it fails

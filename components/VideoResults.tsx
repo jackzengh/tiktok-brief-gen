@@ -82,7 +82,7 @@ export default function MediaResults({ results, onReset }: MediaResultsProps) {
                 <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">
                   AD DESCRIPTION
                 </p>
-                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed whitespace-pre-wrap">
                   {results.data.claudeAdCopy.description}
                 </p>
               </div>
