@@ -44,6 +44,7 @@ export async function analyzeVideo(
   mimeType: string
 ): Promise<VideoAnalysisResult> {
   try {
+    // Upload the file
     const myFile = await ai.files.upload({
       file: filePath,
       config: { mimeType: mimeType },
@@ -51,6 +52,29 @@ export async function analyzeVideo(
 
     console.log(myFile, "myFile");
 
+    // Wait for file to be ACTIVE before using it
+    let fileState = myFile.state;
+    let attempts = 0;
+    const maxAttempts = 30; // Maximum 30 attempts (30 seconds)
+
+    while (fileState !== "ACTIVE" && attempts < maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 1 second
+
+      // Check file status
+      const fileStatus = await ai.files.get({ name: myFile.name || "" });
+      fileState = fileStatus.state;
+      attempts++;
+
+      console.log(`File state: ${fileState}, attempt ${attempts}`);
+    }
+
+    if (fileState !== "ACTIVE") {
+      throw new Error(
+        `File did not become ACTIVE after ${maxAttempts} seconds`
+      );
+    }
+
+    // Now the file is ACTIVE, safe to use
     const prompt = `Please analyze this video and provide:
 
 1. A complete transcript of all spoken dialogue and audio content in the video
@@ -67,6 +91,10 @@ Please format your response as JSON with the following structure:
   "description": "Detailed description of the setting and visuals...",
   "scenes": ["Scene 1 description", "Scene 2 description", ...]
 }`;
+
+    console.log(myFile.uri, "myFile.uri");
+    console.log(myFile.mimeType, "myFile.mimeType");
+    console.log(myFile.sizeBytes, "myFile.sizeBytes");
 
     const result = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -114,6 +142,33 @@ Please format your response as JSON with the following structure:
       }`
     );
   }
+}
+
+async function waitForFileActive(
+  fileName: string,
+  maxWaitSeconds = 60
+): Promise<void> {
+  const startTime = Date.now();
+  const maxWait = maxWaitSeconds * 1000;
+
+  while (Date.now() - startTime < maxWait) {
+    const fileStatus = await ai.files.get({ name: fileName });
+
+    if (fileStatus.state === "ACTIVE") {
+      return; // File is ready!
+    }
+
+    if (fileStatus.state === "FAILED") {
+      throw new Error("File upload failed");
+    }
+
+    // Wait before checking again
+    await new Promise((resolve) => setTimeout(resolve, 2000)); // Check every 2 seconds
+  }
+
+  throw new Error(
+    `File did not become ACTIVE within ${maxWaitSeconds} seconds`
+  );
 }
 
 function extractSection(text: string, section: string): string | null {

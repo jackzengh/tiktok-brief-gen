@@ -42,7 +42,6 @@ The application will be available at http://localhost:3000
 - MOV
 - AVI
 - WebM
-- Maximum file size: 50MB
 
 ## Features
 
@@ -61,11 +60,13 @@ The application will be available at http://localhost:3000
 To deploy to production:
 
 1. Build the application:
+
 ```bash
 npm run build
 ```
 
 2. Start the production server:
+
 ```bash
 npm start
 ```
@@ -73,14 +74,17 @@ npm start
 ## Troubleshooting
 
 ### "GEMINI_API_KEY is not set" Error
+
 Make sure you've created the `.env.local` file and added your API key.
 
 ### Video Upload Fails
+
 - Check that your video is under 50MB
 - Ensure it's in a supported format (MP4, MOV, AVI, WebM)
 - Try converting your video to MP4 if issues persist
 
 ### Slow Processing
+
 - Large videos take longer to process
 - Initial requests may be slower due to cold starts
 - Typical processing time: 30-60 seconds for a 1-2 minute video
