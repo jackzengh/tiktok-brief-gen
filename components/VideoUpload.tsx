@@ -1,9 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { GoogleGenAI } from "@google/genai";
+
+export interface GeminiFileInfo {
+  uri: string;
+  mimeType: string;
+  fileName: string;
+  sizeBytes: number;
+}
 
 interface MediaUploadProps {
-  onUpload: (file: File) => void;
+  onUpload: (fileInfo: GeminiFileInfo) => void;
   loading: boolean;
   error: string | null;
 }
@@ -52,9 +60,59 @@ export default function MediaUpload({
     setSelectedFile(file);
   };
 
-  const handleSubmit = () => {
-    if (selectedFile) {
-      onUpload(selectedFile);
+  const handleSubmit = async () => {
+    if (!selectedFile) return;
+
+    try {
+      // Fetch Gemini API key from server
+      const configResponse = await fetch("/api/gemini-config");
+      if (!configResponse.ok) {
+        throw new Error("Failed to get Gemini configuration");
+      }
+      const { apiKey } = await configResponse.json();
+
+      // Initialize Gemini client
+      const ai = new GoogleGenAI({ apiKey });
+
+      // Upload file directly to Gemini
+      console.log("Uploading file to Gemini...");
+      const uploadedFile = await ai.files.upload({
+        file: selectedFile,
+        config: { mimeType: selectedFile.type },
+      });
+
+      console.log("File uploaded:", uploadedFile);
+
+      // Wait for file to be ACTIVE
+      let fileState = uploadedFile.state;
+      let attempts = 0;
+      const maxAttempts = 30;
+
+      while (fileState !== "ACTIVE" && attempts < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        const fileStatus = await ai.files.get({
+          name: uploadedFile.name || "",
+        });
+        fileState = fileStatus.state;
+        attempts++;
+        console.log(`File state: ${fileState}, attempt ${attempts}`);
+      }
+
+      if (fileState !== "ACTIVE") {
+        throw new Error("File upload to Gemini timed out");
+      }
+
+      // Pass the Gemini file info to parent
+      onUpload({
+        uri: uploadedFile.uri || "",
+        mimeType: uploadedFile.mimeType || selectedFile.type,
+        fileName: selectedFile.name,
+        sizeBytes: Number(uploadedFile.sizeBytes),
+      });
+    } catch (error) {
+      console.error("Error uploading to Gemini:", error);
+      // Let the parent component handle the error display
+      throw error;
     }
   };
 
@@ -127,11 +185,11 @@ export default function MediaUpload({
               </div>
               <div className="flex gap-4 justify-center">
                 <button
-                  onClick={handleSubmit}
+                  onClick={() => handleSubmit().catch(console.error)}
                   disabled={loading}
                   className="px-8 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark disabled:bg-secondary disabled:cursor-not-allowed transition-all font-medium"
                 >
-                  {loading ? "Analyzing..." : "Analyze Media"}
+                  {loading ? "Uploading & Analyzing..." : "Analyze Media"}
                 </button>
                 <button
                   onClick={() => setSelectedFile(null)}

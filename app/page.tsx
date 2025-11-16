@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import MediaUpload from "@/components/VideoUpload";
+import MediaUpload, { GeminiFileInfo } from "@/components/VideoUpload";
 import SavedResultsGrid from "@/components/SavedResultsGrid";
 import VideoResultDetailModal from "@/components/VideoResultDetailModal";
 import ImageResultDetailModal from "@/components/ImageResultDetailModal";
@@ -25,17 +25,23 @@ export default function Home() {
     setSavedResults(loaded);
   }, []);
 
-  const handleMediaUpload = async (file: File) => {
+  const handleMediaUpload = async (fileInfo: GeminiFileInfo) => {
     setLoading(true);
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("video", file);
-
+      // Send only the Gemini file info (not the actual file)
       const response = await fetch("/api/analyze-video", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileUri: fileInfo.uri,
+          mimeType: fileInfo.mimeType,
+          fileName: fileInfo.fileName,
+          sizeBytes: fileInfo.sizeBytes,
+        }),
       });
 
       if (!response.ok) {
@@ -72,7 +78,7 @@ export default function Home() {
       const data = await response.json();
 
       // Save to local storage
-      const savedResult = saveAnalysisResult(data, file.name);
+      const savedResult = saveAnalysisResult(data, fileInfo.fileName);
       setSavedResults((prev) => [savedResult, ...prev]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

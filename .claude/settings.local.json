@@ -5,7 +5,8 @@
       "Bash(npm install)",
       "Bash(npx tsc:*)",
       "Bash(npm run build:*)",
-      "WebFetch(domain:superpower.com)"
+      "WebFetch(domain:superpower.com)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

@@ -61,7 +61,11 @@ export async function analyzeVideo(
       await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 1 second
 
       // Check file status
-      const fileStatus = await ai.files.get({ name: myFile.name || "" });
+      if (!myFile.name) {
+        throw new Error("File upload did not return a file name");
+      }
+
+      const fileStatus = await ai.files.get({ name: myFile.name });
       fileState = fileStatus.state;
       attempts++;
 
@@ -183,6 +187,82 @@ function extractScenes(text: string): string[] {
   return scenes.length > 0 ? scenes : ["Main scene: " + text.substring(0, 200)];
 }
 
+/**
+ * Analyze video using an already-uploaded Gemini file URI
+ * This bypasses the need to upload the file again
+ */
+export async function analyzeVideoByUri(
+  fileUri: string,
+  mimeType: string
+): Promise<VideoAnalysisResult> {
+  try {
+    const prompt = `Please analyze this video and provide:
+
+1. A complete transcript of all spoken dialogue and audio content in the video
+2. A detailed description of the video including:
+   - The overall setting and environment
+   - Key visual elements and props
+   - Lighting and atmosphere
+   - Any notable actions or movements
+3. A breakdown of distinct scenes or segments
+
+Please format your response as JSON with the following structure:
+{
+  "transcript": "Full transcript of the video...",
+  "description": "Detailed description of the setting and visuals...",
+  "scenes": ["Scene 1 description", "Scene 2 description", ...]
+}`;
+
+    console.log("Analyzing video with URI:", fileUri);
+
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: createUserContent([
+        createPartFromUri(fileUri, mimeType),
+        prompt,
+      ]),
+    });
+
+    console.log(result.text, "result text");
+
+    const response = await result;
+    const text = response.text || "";
+    console.log(text, "text");
+
+    // Try to parse JSON from the response
+    let parsedResult: VideoAnalysisResult;
+
+    try {
+      // Remove markdown code blocks if present
+      const jsonText = text
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
+      parsedResult = JSON.parse(jsonText);
+      console.log(parsedResult, "parsedResult");
+    } catch {
+      // If JSON parsing fails, try to extract information from plain text
+      console.warn("Failed to parse JSON, extracting from plain text");
+
+      parsedResult = {
+        transcript:
+          extractSection(text, "transcript") || "No transcript available",
+        description: extractSection(text, "description") || text,
+        scenes: extractScenes(text),
+      };
+    }
+
+    return parsedResult;
+  } catch (error) {
+    console.error("Error analyzing video with Gemini:", error);
+    throw new Error(
+      `Failed to analyze video: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
+}
+
 export async function analyzeImage(
   filePath: string,
   mimeType: string
@@ -296,4 +376,82 @@ function extractArraySection(text: string, section: string): string[] | null {
   }
 
   return null;
+}
+
+/**
+ * Analyze image using an already-uploaded Gemini file URI
+ * This bypasses the need to upload the file again
+ */
+export async function analyzeImageByUri(
+  fileUri: string,
+  mimeType: string
+): Promise<ImageAnalysisResult> {
+  try {
+    const prompt = `Please analyze this image for advertising and marketing purposes. Provide:
+
+1. A detailed description of the image including:
+   - The overall setting and environment
+   - Key visual elements, objects, and subjects
+   - Colors, lighting, and mood
+   - Composition and style
+
+2. Ad copy on the ad (the text that is currently displayed on the ad image)
+
+3. A list of key visual elements that make this image effective for marketing
+
+Please format your response as JSON with the following structure:
+{
+  "description": "Detailed description of the image...",
+  "adCopy": ["Ad copy option 1", "Ad copy option 2", "Ad copy option 3"],
+  "visualElements": ["Element 1", "Element 2", "Element 3"],
+}`;
+
+    console.log("Analyzing image with URI:", fileUri);
+
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: createUserContent([
+        createPartFromUri(fileUri, mimeType),
+        prompt,
+      ]),
+    });
+
+    const response = await result;
+    const text = response.text || "";
+    console.log(text, "text");
+
+    // Try to parse JSON from the response
+    let parsedResult: ImageAnalysisResult;
+
+    try {
+      // Remove markdown code blocks if present
+      const jsonText = text
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
+      parsedResult = JSON.parse(jsonText);
+    } catch {
+      // If JSON parsing fails, try to extract information from plain text
+      console.warn("Failed to parse JSON, extracting from plain text");
+
+      parsedResult = {
+        description: extractSection(text, "description") || text,
+        adCopy: extractArraySection(text, "adCopy") || [
+          "Professional marketing copy for your brand",
+        ],
+        visualElements: extractArraySection(text, "visualElements") || [
+          "Key visual elements identified",
+        ],
+      };
+    }
+
+    return parsedResult;
+  } catch (error) {
+    console.error("Error analyzing image with Gemini:", error);
+    throw new Error(
+      `Failed to analyze image: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
 }
