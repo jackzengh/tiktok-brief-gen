@@ -30,14 +30,14 @@ export default function Home() {
     setError(null);
 
     try {
-      // Send only the Gemini file info (not the actual file)
+      // Send the Blob URL to the server for processing
       const response = await fetch("/api/analyze-video", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fileUri: fileInfo.uri,
+          blobUrl: fileInfo.blobUrl,
           mimeType: fileInfo.mimeType,
           fileName: fileInfo.fileName,
           sizeBytes: fileInfo.sizeBytes,
@@ -51,7 +51,7 @@ export default function Home() {
         // Check for specific status codes first
         if (response.status === 413) {
           errorMessage =
-            "File size exceeds the upload limit. Please try a smaller file (under 50MB).";
+            "File size exceeds the upload limit. Please try a smaller file (under 100MB).";
         } else {
           // Try to read the response body only once
           const contentType = response.headers.get("content-type");
@@ -63,7 +63,7 @@ export default function Home() {
               const text = await response.text();
               if (text.includes("too large") || text.includes("Too Large")) {
                 errorMessage =
-                  "File size is too large. Please try a smaller file (under 50MB).";
+                  "File size is too large. Please try a smaller file (under 100MB).";
               } else {
                 errorMessage = `Server error (${response.status})`;
               }

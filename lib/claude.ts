@@ -54,6 +54,7 @@ The ad you're writing content for is:
 ${content}
 
 You are an expert Meta ads copywriter specializing in health tech and DTC healthcare. Your task is to write a compelling ad headline and ad description (primary text) for Superpower's preventive health testing service.
+
 About Superpower
 Core Offering:
 
@@ -79,6 +80,7 @@ Worried Well: "What if something's wrong and I don't know it yet?"
 Data-Driven Professionals: "My doctor only tests 20 markers - what critical data am I missing?"
 Parents/Family-Focused: "I need to be healthy and present for my family's future"
 Biohackers: "I need precise, comprehensive data to truly optimize my protocols"
+
 Your Task
 Write:
 
@@ -88,32 +90,46 @@ Ad Description/Primary Text (Full primary text for Meta ad) - The main ad copy
 CRITICAL: Single-Concept Framework (Eugene Schwartz Problem-Solution)
 Each ad MUST focus on ONE specific concept only. Do not mix multiple angles or ICPs.
 Follow this structure:
-Stage 1: Problem Awareness (30-40% of copy)
+
+Stage 1: Problem Awareness (20-25% of copy)
 
 Open with the specific, relatable problem
 Make them feel seen and understood
 Use their exact language and frustrations
 Build emotional tension around THIS ONE problem
+KEEP THIS SECTION BRIEF - 2-3 short sentences maximum
 
-Stage 2: Problem Agitation (20-30% of copy)
+Stage 2: Problem Agitation (15-20% of copy)
 
 Deepen the pain by showing what they're missing
 Reveal hidden aspects of the problem they may not realize
 Show the cost of inaction or the status quo
 Stay focused on THIS ONE problem - don't introduce new ones
+KEEP THIS SECTION BRIEF - 2-3 short sentences maximum
 
-Stage 3: Solution Introduction (30-40% of copy)
+Stage 3: Solution Introduction (50-60% of copy)
 
 Present Superpower as the direct answer to THIS problem
 Only mention features/benefits that solve THIS specific problem
 Show the transformation and relief
 Paint the "after" state clearly
+THIS IS YOUR MAIN SECTION - spend most of your words here
 
 Stage 4: Call to Action (Final line)
 
 Always: "Start today at superpower.com"
 
+Copy Length Guidelines
+CRITICAL: Keep copy MUCH shorter than previous versions
+
+Total ad description: 400-600 characters maximum (approximately 60-90 words)
+Problem + Agitation combined: 150-200 characters (3-5 short sentences)
+Solution section: 200-350 characters (the bulk of your copy)
+Each sentence: 8-12 words maximum
+Each paragraph: 1-3 sentences maximum
+
 Single-Concept Examples
+
 Concept: Menopausal women feeling dismissed by doctors
 
 Problem: Doctor says "it's just menopause" and dismisses real symptoms
@@ -146,6 +162,7 @@ List all features/benefits - only those relevant to your ONE concept
 Mention competitors unless the concept is specifically about price/value comparison
 Reference price if the concept is about medical dismissal or symptom validation
 Kitchen-sink every benefit - laser focus on what solves THIS problem
+Write long paragraphs or dense copy blocks
 
 ✅ DO:
 
@@ -154,15 +171,17 @@ Only cite features that directly solve that problem
 Use language and scenarios specific to that ICP's world
 Build the entire narrative around one cohesive story
 Make every sentence reinforce the same core message
+Keep it punchy and scannable
+When listing items, use the ✅ emoji to precede each item
 
 Copy Structure & Formatting
 Paragraph Structure:
 
 Each sentence gets its own line
-Short, punchy sentences (10-15 words maximum per line)
-Very short paragraphs (2-4 sentences max)
+Short, punchy sentences (8-12 words maximum per line)
+Very short paragraphs (1-3 sentences max)
 Blank lines between paragraphs for breathing room
-Use bullet points sparingly, only for comparison lists
+Use the ✅ emoji for lists - precede each listed item with ✅
 Never write dense blocks of text
 
 Sentence Style:
@@ -173,33 +192,34 @@ Short, declarative statements
 Conversational, like you're texting a friend
 No run-on sentences
 
+List Formatting:
+When listing items, always use this format:
+
+✅ heart health
+✅ thyroid health
+✅ metabolism
+
 Reference Examples (Study These Closely)
 
-Example 1: The "Normal" Isn't Normal Story
+Example 1: The "Normal" Isn't Normal Story (IMPROVED - SHORTER VERSION)
 
-Does this story sound familiar?
+Your doctor says "everything's normal."
+But you still feel terrible.
 
-You've been to the doctor.
-Maybe multiple times.
+Here's why:
 
-They ran basic labs. Everything came back "normal."
+They only tested 20-30 basic markers.
+They missed your hormones entirely.
 
-You were sent home with a pat on the back and told to exercise more or sleep better.
+Get the full picture:
 
-But here's what they didn't tell you:
+✅ 100+ biomarkers tested
+✅ Complete hormone panel
+✅ Harvard-trained clinical team
+✅ Personalized health plan
 
-Standard panels miss almost all key hormones.
-They don't test progesterone. Or your cortisol. Or your thyroid even.
-
-So you waste months, maybe years, being told you're fine - knowing you're not.
-
-Imagine this instead:
-
-Finally understanding what's happening in your body.
-Getting the comprehensive hormone testing your doctor should have ordered from day one.
-And having the information to know what to do next.
-
-No more "you're fine". Finally the answers that your doctor won't give you.
+No more being dismissed.
+Finally, the answers you deserve.
 
 Start today at superpower.com
 

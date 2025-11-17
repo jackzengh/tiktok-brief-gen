@@ -1,10 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { GoogleGenAI } from "@google/genai";
+import { upload } from "@vercel/blob/client";
 
 export interface GeminiFileInfo {
-  uri: string;
+  blobUrl: string;
   mimeType: string;
   fileName: string;
   sizeBytes: number;
@@ -64,53 +64,24 @@ export default function MediaUpload({
     if (!selectedFile) return;
 
     try {
-      // Fetch Gemini API key from server
-      const configResponse = await fetch("/api/gemini-config");
-      if (!configResponse.ok) {
-        throw new Error("Failed to get Gemini configuration");
-      }
-      const { apiKey } = await configResponse.json();
+      // fetch from Vercel Blob
 
-      // Initialize Gemini client
-      const ai = new GoogleGenAI({ apiKey });
-
-      // Upload file directly to Gemini
-      console.log("Uploading file to Gemini...");
-      const uploadedFile = await ai.files.upload({
-        file: selectedFile,
-        config: { mimeType: selectedFile.type },
+      const blob = await upload(selectedFile.name, selectedFile, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
       });
 
-      console.log("File uploaded:", uploadedFile);
+      console.log("Blob uploaded:", blob);
 
-      // Wait for file to be ACTIVE
-      let fileState = uploadedFile.state;
-      let attempts = 0;
-      const maxAttempts = 30;
-
-      while (fileState !== "ACTIVE" && attempts < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        const fileStatus = await ai.files.get({
-          name: uploadedFile.name || "",
-        });
-        fileState = fileStatus.state;
-        attempts++;
-        console.log(`File state: ${fileState}, attempt ${attempts}`);
-      }
-
-      if (fileState !== "ACTIVE") {
-        throw new Error("File upload to Gemini timed out");
-      }
-
-      // Pass the Gemini file info to parent
+      // Pass the Blob info to parent
       onUpload({
-        uri: uploadedFile.uri || "",
-        mimeType: uploadedFile.mimeType || selectedFile.type,
+        blobUrl: blob.url,
+        mimeType: selectedFile.type,
         fileName: selectedFile.name,
-        sizeBytes: Number(uploadedFile.sizeBytes),
+        sizeBytes: selectedFile.size,
       });
     } catch (error) {
-      console.error("Error uploading to Gemini:", error);
+      console.error("Error uploading to Vercel Blob:", error);
       // Let the parent component handle the error display
       throw error;
     }
@@ -171,7 +142,7 @@ export default function MediaUpload({
                 or drag and drop
               </div>
               <p className="text-sm text-secondary">
-                Videos: MP4, MOV, AVI | Images: JPG, PNG, WebP (up to 50MB)
+                Videos: MP4, MOV, AVI | Images: JPG, PNG, WebP (up to 100MB)
               </p>
             </>
           ) : (

@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.68.0",
     "@google/genai": "^1.29.1",
     "@google/generative-ai": "^0.21.0",
+    "@vercel/blob": "^2.0.0",
     "next": "^15.5.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

@@ -1,23 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeVideoByUri, analyzeImageByUri } from "@/lib/gemini";
+import { analyzeVideo, analyzeImage } from "@/lib/gemini";
 import { generateAdCopy } from "@/lib/claude";
+import { VideoAnalysisResult, ImageAnalysisResult } from "@/lib/gemini";
+import { writeFile, unlink } from "fs/promises";
+import { join } from "path";
 
 // Configure route segment for video processing
 export const runtime = "nodejs";
 export const maxDuration = 300; // 5 minutes for video processing
 
 export async function POST(request: NextRequest) {
-  try {
-    // Parse JSON body containing Gemini file info
-    const body = await request.json();
-    const { fileUri, mimeType } = body;
+  let tempFilePath: string | null = null;
 
-    if (!fileUri || !mimeType) {
+  try {
+    // Parse JSON body containing Blob URL
+    const body = await request.json();
+    const { blobUrl, mimeType, fileName } = body;
+
+    if (!blobUrl || !mimeType) {
       return NextResponse.json(
-        { error: "Missing file URI or mime type" },
+        { error: "Missing blob URL or mime type" },
         { status: 400 }
       );
     }
+
+    // Download file from Vercel Blob to temp storage
+    console.log("Downloading file from Blob:", blobUrl);
+    const fileResponse = await fetch(blobUrl);
+    if (!fileResponse.ok) {
+      throw new Error("Failed to download file from Blob");
+    }
+
+    const arrayBuffer = await fileResponse.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Save to temp directory
+    const tmpDir = process.env.VERCEL ? "/tmp" : join(process.cwd(), "tmp");
+    const tempFileName = `${Date.now()}-${fileName || "upload"}`;
+    tempFilePath = join(tmpDir, tempFileName);
+
+    await writeFile(tempFilePath, buffer);
+    console.log("File saved to temp:", tempFilePath);
 
     // Validate file type
     const isVideo = mimeType.startsWith("video/");
@@ -30,10 +53,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Analyze media with Gemini using the already-uploaded file URI
-    let result;
+    // Analyze media with Gemini (this will upload to Gemini internally)
+    let result: VideoAnalysisResult | ImageAnalysisResult;
     if (isVideo) {
-      result = await analyzeVideoByUri(fileUri, mimeType);
+      result = await analyzeVideo(tempFilePath, mimeType);
 
       // Generate ad copy with Claude using the description
       try {
@@ -48,7 +71,7 @@ export async function POST(request: NextRequest) {
         // Continue without Claude ad copy if it fails
       }
     } else if (isImage) {
-      result = await analyzeImageByUri(fileUri, mimeType);
+      result = await analyzeImage(tempFilePath, mimeType);
 
       // Generate ad copy with Claude using the description
       try {
@@ -65,9 +88,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Clean up temp file
+    if (tempFilePath) {
+      try {
+        await unlink(tempFilePath);
+        console.log("Temp file cleaned up:", tempFilePath);
+      } catch (cleanupError) {
+        console.error("Error cleaning up temp file:", cleanupError);
+        // Don't fail the request if cleanup fails
+      }
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error processing media:", error);
+
+    // Clean up temp file on error
+    if (tempFilePath) {
+      try {
+        await unlink(tempFilePath);
+      } catch (cleanupError) {
+        console.error("Error cleaning up temp file:", cleanupError);
+      }
+    }
+
     return NextResponse.json(
       {
         error:
