@@ -24,11 +24,25 @@ npm run lint         # Run ESLint
 ```
 
 ### Environment Setup
-Two API keys are required in `.env.local`:
+Required environment variables in `.env.local`:
 - `GEMINI_API_KEY` - Google Gemini API key (get at https://makersuite.google.com/app/apikey)
 - `ANTHROPIC_API_KEY` - Anthropic API key for Claude
+- `GOOGLE_CLIENT_ID` - Google OAuth Client ID (from Google Cloud Console)
+- `GOOGLE_CLIENT_SECRET` - Google OAuth Client Secret (from Google Cloud Console)
+- `AUTH_SECRET` - Random string for NextAuth encryption (generate with: `openssl rand -base64 32`)
+- `NEXTAUTH_URL` - Your application URL (e.g., `http://localhost:3000` for dev, your domain for production)
 
 ## Architecture
+
+### Authentication
+The application uses NextAuth v5 (Auth.js) for authentication:
+- **Provider**: Google OAuth 2.0
+- **Session Strategy**: JWT (stateless, no database required)
+- **Protected Routes**: All routes require authentication except `/signin`
+- **Middleware**: Automatically redirects unauthenticated users to `/signin`
+- **Configuration**: `auth.ts` at project root
+- **Session Access**: Use `useSession()` hook in client components or `auth()` in server components
+- **Sign Out**: Redirects to `/signin` page after logout
 
 ### File Upload & Processing Flow
 1. **Client** (`app/page.tsx`) → User uploads media file
@@ -66,6 +80,8 @@ Results use discriminated unions:
 - `SavedResultsGrid.tsx` - Grid display of all saved analysis results
 - `VideoResultDetailModal.tsx` - Modal for detailed video analysis view
 - `ImageResultDetailModal.tsx` - Modal for detailed image analysis view
+- `Header.tsx` - User profile and sign-out button
+- `SessionProvider.tsx` - NextAuth session provider wrapper
 
 ### Import Aliases
 Uses `@/*` for all imports (configured in `tsconfig.json`):

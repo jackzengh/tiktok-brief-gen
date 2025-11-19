@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import SessionProvider from "@/components/SessionProvider";
+import { StrictMode } from "react";
 
 export const metadata: Metadata = {
   title: "Video & Image AI Analysis",
@@ -13,8 +15,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">{children}</body>
-    </html>
+    <StrictMode>
+      <html lang="en">
+        <body className="antialiased">
+          <SessionProvider>{children}</SessionProvider>
+        </body>
+      </html>
+    </StrictMode>
   );
 }

@@ -24,15 +24,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Download file from Vercel Blob to temp storage
+    // Download file from Vercel Blob to temp storage (with retry for race conditions)
     console.log("Downloading file from Blob:", blobUrl);
-    const fileResponse = await fetch(blobUrl);
-    if (!fileResponse.ok) {
+
+    let fileResponse: Response | null = null;
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+      fileResponse = await fetch(blobUrl);
+    } catch (error) {
+      console.error("Error downloading file from Blob:", error);
       throw new Error("Failed to download file from Blob");
     }
 
+    if (!fileResponse || !fileResponse.ok) {
+      throw new Error("Failed to download file from Blob");
+    }
+
+    console.log(
+      "Blob download successful. Size:",
+      fileResponse.headers.get("content-length")
+    );
+
     const arrayBuffer = await fileResponse.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    console.log("Downloaded buffer size:", buffer.length, "bytes");
 
     // Save to temp directory
     const tmpDir = process.env.VERCEL ? "/tmp" : join(process.cwd(), "tmp");

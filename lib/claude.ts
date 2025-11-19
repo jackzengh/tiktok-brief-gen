@@ -45,10 +45,13 @@ export async function generateAdCopy(
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1024,
+      tool_choice: { type: "tool", name: "ad_copy" },
       messages: [
         {
           role: "user",
-          content: `You are a professional ad copywriter. Using the Eugene Schwartz's Problem-Solution Framework write ad copy.
+          content: `IMPORTANT: You MUST use the ad_copy tool to respond. Do not return plain text.
+
+You are a professional ad copywriter. Using the Eugene Schwartz's Problem-Solution Framework write ad copy.
 
 The ad you're writing content for is:
 ${content}
@@ -58,12 +61,12 @@ You are an expert Meta ads copywriter specializing in health tech and DTC health
 About Superpower
 Core Offering:
 
-Comprehensive blood testing: 100+ biomarkers (view full list at superpower.com/biomarkers)
+Comprehensive blood testing: 100+ biomarkers
 Price: $199/year (vs competitors like Function Health at $499)
 Screens for 1,000+ diseases years before symptoms appear
 Quarterly testing available at 2,000+ locations nationwide
 Personalized health protocols based on individual data
-24/7 SMS concierge access to clinicians from Harvard, UCLA, and Stanford
+24/7 SMS concierge access to US-based board-certified clinicians 
 Curated supplement marketplace (20% cheaper than Amazon, clinically vetted)
 150,000+ active members
 
@@ -79,7 +82,7 @@ Performance Optimizers: "Why am I tired/underperforming despite doing everything
 Worried Well: "What if something's wrong and I don't know it yet?"
 Data-Driven Professionals: "My doctor only tests 20 markers - what critical data am I missing?"
 Parents/Family-Focused: "I need to be healthy and present for my family's future"
-Biohackers: "I need precise, comprehensive data to truly optimize my protocols"
+Menopausal Women: "I'm feeling dismissed by my doctor and need to know what's really going on"
 
 Your Task
 Write:
@@ -139,7 +142,6 @@ DON'T mention: Price comparisons to Function Health, biohacker optimization, dis
 Concept: Healthy people confused by "normal" test results despite feeling off
 
 Problem: Everything tests "normal" but they know something's wrong
-Features to mention: 100+ biomarkers vs standard 20-30, early detection, comprehensive testing
 DON'T mention: Specific hormone details unless relevant, supplement marketplace unless testing reveals deficiencies
 
 Concept: Price-conscious consumers comparing to Function Health
@@ -151,7 +153,6 @@ DON'T mention: Generic "feeling dismissed by doctors" unless tied to price/value
 Concept: Parents worried about being there for their kids' future
 
 Problem: Fear of missing something serious that could take them away from family
-Features to mention: Screen 1,000+ diseases early, quarterly tracking, early detection
 DON'T mention: Performance optimization, biohacking, price comparisons
 
 CRITICAL: Stay On-Concept Rules
@@ -172,16 +173,13 @@ Use language and scenarios specific to that ICP's world
 Build the entire narrative around one cohesive story
 Make every sentence reinforce the same core message
 Keep it punchy and scannable
-When listing items, use the ✅ emoji to precede each item
 
 Copy Structure & Formatting
 Paragraph Structure:
 
-Each sentence gets its own line
 Short, punchy sentences (8-12 words maximum per line)
 Very short paragraphs (1-3 sentences max)
 Blank lines between paragraphs for breathing room
-Use the ✅ emoji for lists - precede each listed item with ✅
 Never write dense blocks of text
 
 Sentence Style:
@@ -192,50 +190,41 @@ Short, declarative statements
 Conversational, like you're texting a friend
 No run-on sentences
 
-List Formatting:
-When listing items, always use this format:
-
-✅ heart health
-✅ thyroid health
-✅ metabolism
-
 Reference Examples (Study These Closely)
 
-Example 1: The "Normal" Isn't Normal Story (IMPROVED - SHORTER VERSION)
+Example 1: 
+Does this story sound familiar?
 
-Your doctor says "everything's normal."
-But you still feel terrible.
+You've been to the doctor.
+Maybe multiple times.
 
-Here's why:
+They ran basic labs. Everything came back "normal."
 
-They only tested 20-30 basic markers.
-They missed your hormones entirely.
+You were sent home with a pat on the back and told to exercise more or sleep better.
 
-Get the full picture:
+But here's what they didn't tell you:
 
-✅ 100+ biomarkers tested
-✅ Complete hormone panel
-✅ Harvard-trained clinical team
-✅ Personalized health plan
+Standard panels miss almost all key hormones.
+They don't test progesterone. Or your cortisol. Or your thyroid even.
 
-No more being dismissed.
-Finally, the answers you deserve.
+So you waste months, maybe years, being told you're fine - knowing you're not.
+
+Imagine this instead:
+
+Finally understanding what's happening in your body.
+Getting the comprehensive hormone testing your doctor should have ordered from day one.
+And having the information to know what to do next.
+
+No more "you're fine". Finally the answers that your doctor won't give you.
 
 Start today at superpower.com
 
 
-{
-  "headline": "your headline here",
-  "description": "your longer ad description here"
-}`,
+
+REMINDER: Use the ad_copy tool to provide your response with headline and description fields.`,
         },
       ],
       tools: [
-        {
-          type: "web_search_20250305",
-          name: "web_search",
-          max_uses: 5,
-        },
         {
           name: "ad_copy",
           description: "Write ad copy with headline and description",
@@ -282,59 +271,39 @@ Start today at superpower.com
     // Handle text response (fallback if tool wasn't used)
     if (firstBlock.type === "text") {
       const responseText = firstBlock.text;
+      console.log(
+        "[Claude] Returned text response. First 200 chars:",
+        responseText.substring(0, 200)
+      );
 
-      // Try to parse as JSON
-      try {
-        // Clean up markdown code blocks if present
-        let cleanedText = responseText.trim();
-        cleanedText = cleanedText
-          .replace(/^```json\s*/i, "")
-          .replace(/^```\s*/i, "")
-          .replace(/\s*```$/i, "");
+      // Try multiple JSON extraction methods
+      let parsedAdCopy: AdCopy | null = null;
 
-        const adCopy = JSON.parse(cleanedText);
-        console.log("Parsed adCopy from text:", adCopy);
-        return {
-          headline: adCopy.headline || "",
-          description: adCopy.description || "",
-        };
-      } catch (parseError) {
-        console.error(
-          "Failed to parse Claude text response as JSON:",
-          parseError
-        );
+      // Method 1: Direct JSON parse (for clean JSON responses)
+      if (!parsedAdCopy) {
+        try {
+          let cleanedText = responseText.trim();
+          cleanedText = cleanedText
+            .replace(/^```json\s*/i, "")
+            .replace(/^```\s*/i, "")
+            .replace(/\s*```$/i, "");
 
-        // Try to extract JSON from markdown code blocks
-        const jsonMatch = responseText.match(
-          /```(?:json)?\s*(\{[\s\S]*?\})\s*```/
-        );
-        if (jsonMatch) {
-          try {
-            const adCopy = JSON.parse(jsonMatch[1]);
-            return {
-              headline: adCopy.headline || "",
-              description: adCopy.description || "",
-            };
-          } catch (e) {
-            console.error("Failed to parse extracted JSON:", e);
-          }
+          parsedAdCopy = JSON.parse(cleanedText);
+          console.log("[Claude] ✓ Parsed using direct JSON");
+        } catch {
+          // Continue to next method
         }
-
-        // Fallback: extract headline and description using regex
-        const headlineMatch = responseText.match(/"headline":\s*"([^"]+)"/);
-        const descriptionMatch = responseText.match(
-          /"description":\s*"([^"]+)"/
-        );
-
-        return {
-          headline: headlineMatch
-            ? headlineMatch[1]
-            : "Discover Something Amazing",
-          description: descriptionMatch
-            ? descriptionMatch[1]
-            : "Check out this incredible ad that will capture your attention.",
-        };
       }
+
+      // Final fallback: Claude didn't return valid format
+      console.warn(
+        "[Claude] ⚠ No valid ad copy found. Using fallback defaults."
+      );
+      return {
+        headline: "Comprehensive Health Testing",
+        description:
+          "Get 100+ biomarkers tested for just $199/year. Screen for 1,000+ diseases before symptoms appear. Start today at superpower.com",
+      };
     }
 
     // If we get here, the response format is unexpected

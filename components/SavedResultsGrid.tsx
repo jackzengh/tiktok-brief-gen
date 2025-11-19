@@ -1,11 +1,11 @@
 "use client";
 
-import { SavedAnalysisResult } from "@/lib/storage";
+import { AnalysisItem } from "@/lib/storage";
 import { useState } from "react";
 
 interface SavedResultsGridProps {
-  results: SavedAnalysisResult[];
-  onSelectResult: (result: SavedAnalysisResult) => void;
+  results: AnalysisItem[];
+  onSelectResult: (result: AnalysisItem) => void;
   onDeleteResult: (id: string) => void;
 }
 
@@ -53,15 +53,21 @@ export default function SavedResultsGrid({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {results.map((result) => {
           const isVideo = result.type === "video";
-          const headline = result.claudeAdCopy?.headline || "No headline";
-          const description = result.claudeAdCopy?.description;
+          const isPending = result.status === "pending" || result.status === "processing";
+          const isError = result.status === "error";
+          const isCompleted = result.status === "completed";
+
+          const headline = isCompleted ? (result.claudeAdCopy?.headline || "No headline") : "";
+          const description = isCompleted ? result.claudeAdCopy?.description : "";
 
           return (
             <div
               key={result.id}
-              onClick={() => onSelectResult(result)}
-              className={`bg-white dark:bg-black border border-border rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:border-primary hover:shadow-lg ${
-                deletingId === result.id ? "opacity-50 scale-95" : ""
+              onClick={() => isCompleted && onSelectResult(result)}
+              className={`bg-white dark:bg-black border border-border rounded-2xl overflow-hidden transition-all duration-200 ${
+                isCompleted ? "cursor-pointer hover:border-primary hover:shadow-lg" : "cursor-default"
+              } ${deletingId === result.id ? "opacity-50 scale-95" : ""} ${
+                isPending ? "animate-pulse" : ""
               }`}
             >
               {/* Header with type badge and delete button */}
@@ -97,38 +103,72 @@ export default function SavedResultsGrid({
 
               {/* Content */}
               <div className="p-6 space-y-4">
-                {/* Headline */}
-                <h3 className="font-bold text-lg text-black dark:text-white line-clamp-2 leading-tight">
-                  {headline}
-                </h3>
+                {isPending && (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                    <p className="text-sm text-secondary font-medium">
+                      {result.status === "pending" ? "Uploading..." : "Analyzing..."}
+                    </p>
+                  </div>
+                )}
 
-                {/* Description preview */}
-                <p className="text-sm text-secondary line-clamp-3 leading-relaxed">
-                  {truncateText(
-                    description || "Claude failed to load copy",
-                    120
-                  )}
-                </p>
+                {isError && (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <svg
+                      className="w-12 h-12 text-red-500 mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <p className="text-sm text-red-600 dark:text-red-400 font-medium text-center">
+                      {result.status === "error" && "error" in result ? result.error : "Analysis failed"}
+                    </p>
+                  </div>
+                )}
 
-                {/* Footer with timestamp */}
-                <div className="pt-4 border-t border-border flex justify-between items-center">
-                  <p className="text-xs text-secondary">
-                    {formatDate(result.timestamp)}
-                  </p>
-                  <svg
-                    className="w-4 h-4 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </div>
+                {isCompleted && (
+                  <>
+                    {/* Headline */}
+                    <h3 className="font-bold text-lg text-black dark:text-white line-clamp-2 leading-tight">
+                      {headline}
+                    </h3>
+
+                    {/* Description preview */}
+                    <p className="text-sm text-secondary line-clamp-3 leading-relaxed">
+                      {truncateText(
+                        description || "Claude failed to load copy",
+                        120
+                      )}
+                    </p>
+
+                    {/* Footer with timestamp */}
+                    <div className="pt-4 border-t border-border flex justify-between items-center">
+                      <p className="text-xs text-secondary">
+                        {formatDate(result.timestamp)}
+                      </p>
+                      <svg
+                        className="w-4 h-4 text-primary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           );

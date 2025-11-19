@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Check if BLOB_READ_WRITE_TOKEN is set
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error("BLOB_READ_WRITE_TOKEN environment variable is not set");
+    return NextResponse.json(
+      {
+        error:
+          "Blob storage not configured. Please add BLOB_READ_WRITE_TOKEN environment variable in Vercel settings.",
+      },
+      { status: 500 }
+    );
+  }
+
   const body = (await request.json()) as HandleUploadBody;
 
   try {
@@ -32,7 +44,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
-      { error: "Upload failed" },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Upload failed. Please check server logs.",
+      },
       { status: 400 }
     );
   }
