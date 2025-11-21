@@ -170,7 +170,7 @@ export default function Home() {
           </h1>
           <p className="text-xl text-secondary max-w-3xl mx-auto leading-relaxed">
             Upload a video for transcription and scene analysis, or an image for
-            ad copy and marketing insights
+            ad copy generation
           </p>
         </div>
 

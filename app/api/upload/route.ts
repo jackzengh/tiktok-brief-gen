@@ -32,6 +32,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             "image/webp",
           ],
           maximumSizeInBytes: 100 * 1024 * 1024, // 100MB max
+          addRandomSuffix: true,
         };
       },
       onUploadCompleted: async ({ blob }) => {
