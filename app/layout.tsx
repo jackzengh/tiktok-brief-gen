@@ -4,7 +4,7 @@ import SessionProvider from "@/components/SessionProvider";
 import { StrictMode } from "react";
 
 export const metadata: Metadata = {
-  title: "Video & Image AI Analysis",
+  title: "Superpower Meta Copywriter",
   description:
     "Upload videos for AI transcription and scene analysis, or images for detailed description",
 };

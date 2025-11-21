@@ -166,7 +166,7 @@ export default function Home() {
         {/* Header Section */}
         <div className="text-center mb-16">
           <h1 className="text-5xl sm:text-6xl font-bold text-black dark:text-white mb-6 tracking-tight">
-            LFG Superpower Ad Copy Generator
+            Superpower Meta Copywriter
           </h1>
           <p className="text-xl text-secondary max-w-3xl mx-auto leading-relaxed">
             Upload a video for transcription and scene analysis, or an image for
