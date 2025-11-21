@@ -1,5 +1,5 @@
-import NextAuth from "next-auth"
-import Google from "next-auth/providers/google"
+import NextAuth from "next-auth";
+import Google from "next-auth/providers/google";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -10,10 +10,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         params: {
           prompt: "consent",
           access_type: "offline",
-          response_type: "code"
-        }
-      }
-    })
+          response_type: "code",
+        },
+      },
+    }),
   ],
   session: {
     strategy: "jwt",
@@ -23,27 +23,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user
-      const isOnSignIn = nextUrl.pathname.startsWith('/signin')
+      const isLoggedIn = !!auth?.user;
+      const isOnSignIn = nextUrl.pathname.startsWith("/signin");
 
       if (isOnSignIn) {
-        if (isLoggedIn) return Response.redirect(new URL('/', nextUrl))
-        return true // Allow access to signin page when not logged in
+        if (isLoggedIn) return Response.redirect(new URL("/", nextUrl));
+        return true; // Allow access to signin page when not logged in
       }
 
-      return isLoggedIn // Require auth for all other pages
+      return isLoggedIn; // Require auth for all other pages
     },
     jwt({ token, user }) {
       if (user) {
-        token.id = user.id
+        token.id = user.id;
       }
-      return token
+      return token;
     },
     session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string
+        session.user.id = token.id as string;
       }
-      return session
-    }
-  }
-})
+      return session;
+    },
+  },
+});
